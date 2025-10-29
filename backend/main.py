@@ -16,7 +16,7 @@ load_dotenv()
 app = FastAPI(title="AI Meeting Summarizer API")
 try:
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
     print(f"FATAL: Error configuring Google AI client: {e}")
     gemini_model = None
