@@ -1,11 +1,8 @@
 # backend/main.py
 import os
 import json
-import smtplib
 import httpx
-
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Body, File, UploadFile
@@ -23,6 +20,13 @@ if not GROQ_API_KEY:
     print("WARNING: GROQ_API_KEY is not configured.")
 
 groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+
+if not RESEND_API_KEY:
+    print("WARNING: RESEND_API_KEY is not configured.")
+else:
+    resend.api_key = RESEND_API_KEY
 
 # --- API and App Initialization ---
 app = FastAPI(title="AI Meeting Summarizer API")
@@ -195,14 +199,9 @@ async def summarize_transcript(data: dict = Body(...)):
 
 @app.post("/email_summary")
 async def email_summary(data: dict = Body(...)):
-    host = os.getenv("EMAIL_HOST")
-    port_str = os.getenv("EMAIL_PORT")
-    user = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASSWORD")
-
     recipient = data.get("email")
 
-    if not all([host, port_str, user, password]):
+    if not RESEND_API_KEY:
         raise HTTPException(
             status_code=501,
             detail="Email service is not configured."
@@ -211,38 +210,29 @@ async def email_summary(data: dict = Body(...)):
     if not recipient or not recipient.strip():
         raise HTTPException(
             status_code=400,
-            detail="Please provide an email address."
+            detail="Recipient email address is required."
         )
 
     recipient = recipient.strip()
 
+    print(f"Sending meeting summary to: {recipient}")
+
     try:
-        port = int(port_str)
-
-        print(f"Sending meeting summary to: {recipient}")
-
         html_content = format_summary_as_html(data)
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Your MeetScribe Meeting Insights"
-        message["From"] = f"MeetScribe <{user}>"
-        message["To"] = recipient
+        params = {
+            "from": "MeetScribe <onboarding@resend.dev>",
+            "to": [recipient],
+            "subject": "Your AI Meeting Summary Report",
+            "html": html_content,
+        }
 
-        message.attach(MIMEText(html_content, "html"))
+        email = resend.Emails.send(params)
 
-        with smtplib.SMTP(host, port, timeout=30) as server:
-            server.starttls()
-            server.login(user, password)
-            server.sendmail(
-                user,
-                recipient,
-                message.as_string()
-            )
-
-        print(f"Email successfully sent to: {recipient}")
+        print(f"Email sent successfully. ID: {email}")
 
         return {
-            "message": f"Meeting insights successfully sent to {recipient}"
+            "message": f"Summary successfully sent to {recipient}"
         }
 
     except Exception as e:

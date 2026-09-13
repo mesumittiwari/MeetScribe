@@ -6,3 +6,4 @@ google-genai
 groq
 python-multipart==0.0.9
 httpx>=0.23.0,<1.0.0
+resend
