@@ -64,6 +64,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('');
   const [error, setError] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
 
@@ -149,20 +151,48 @@ function App() {
   };
 
   const handleEmailSummary = async () => {
-    if (!summaryData) return;
-    setIsLoading(true);
-    setLoadingStatus('Emailing summary...');
-    try {
-        const response = await axios.post(`${API_BASE_URL}/email_summary`, summaryData);
-        alert(response.data.message);
-    } catch (err) {
-        const errorMessage = err.response?.data?.detail || 'Could not send email.';
-        setError(`Email Error: ${errorMessage}`);
-    } finally {
-        setIsLoading(false);
-        setLoadingStatus('');
-    }
-  };
+  if (!summaryData) return;
+
+  if (!emailAddress.trim()) {
+    setError('Please enter an email address.');
+    return;
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(emailAddress.trim())) {
+    setError('Please enter a valid email address.');
+    return;
+  }
+
+  setIsLoading(true);
+  setLoadingStatus('Emailing summary...');
+  setError('');
+
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/email_summary`,
+      {
+        ...summaryData,
+        email: emailAddress.trim()
+      }
+    );
+
+    alert(response.data.message);
+    setShowEmailDialog(false);
+
+  } catch (err) {
+    const errorMessage =
+      err.response?.data?.detail || 'Could not send email.';
+
+    setError(`Email Error: ${errorMessage}`);
+
+  } finally {
+    setIsLoading(false);
+    setLoadingStatus('');
+  }
+};
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
@@ -234,7 +264,7 @@ function App() {
             <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
               <h2 className="text-3xl font-bold text-white">Analysis Results</h2>
               <div className="flex items-center gap-x-3">
-                 <button onClick={handleEmailSummary} disabled={isLoading} className="flex items-center justify-center gap-x-2 px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-500">
+                 <button onClick={() => setShowEmailDialog(true)} disabled={isLoading} className="flex items-center justify-center gap-x-2 px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-500">
                   {isLoading && loadingStatus === 'Emailing summary...' ? <LoadingSpinner/> : '📧 Email Summary'}
                 </button>
                 <button onClick={handleExportJSON} className="px-4 py-2 text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">Export JSON</button>
@@ -250,6 +280,61 @@ function App() {
             </div>
           </div>
         )}
+
+        {showEmailDialog && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+              <div className="w-full max-w-md bg-slate-800 rounded-xl shadow-2xl p-6 border border-slate-700">
+
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  📧 Email Meeting Insights
+                </h2>
+
+                <p className="text-slate-400 mb-5">
+                  Enter the email address where you'd like to receive the meeting report.
+                </p>
+
+                <input
+                  type="email"
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-md text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                  disabled={isLoading}
+                  autoFocus
+                />
+
+                <div className="flex justify-end gap-3 mt-6">
+
+                  <button
+                    onClick={() => {
+                      setShowEmailDialog(false);
+                      setError('');
+                    }}
+                    disabled={isLoading}
+                    className="px-4 py-2 rounded-md text-slate-300 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleEmailSummary}
+                    disabled={isLoading || !emailAddress.trim()}
+                    className="flex items-center justify-center gap-2 px-5 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-500"
+                  >
+                    {isLoading ? (
+                      <>
+                        <LoadingSpinner />
+                        Sending...
+                      </>
+                    ) : (
+                      'Send Report'
+                    )}
+                  </button>
+
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

@@ -195,19 +195,63 @@ async def summarize_transcript(data: dict = Body(...)):
 
 @app.post("/email_summary")
 async def email_summary(data: dict = Body(...)):
-    host, port_str, user, password, recipient = (os.getenv("EMAIL_HOST"), os.getenv("EMAIL_PORT"), os.getenv("EMAIL_USER"), os.getenv("EMAIL_PASSWORD"), os.getenv("EMAIL_RECIPIENT"))
-    if not all([host, port_str, user, password, recipient]):
-        raise HTTPException(status_code=501, detail="Email service is not configured.")
+    host = os.getenv("EMAIL_HOST")
+    port_str = os.getenv("EMAIL_PORT")
+    user = os.getenv("EMAIL_USER")
+    password = os.getenv("EMAIL_PASSWORD")
+
+    recipient = data.get("email")
+
+    if not all([host, port_str, user, password]):
+        raise HTTPException(
+            status_code=501,
+            detail="Email service is not configured."
+        )
+
+    if not recipient or not recipient.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Please provide an email address."
+        )
+
+    recipient = recipient.strip()
+
     try:
         port = int(port_str)
+
+        print(f"Sending meeting summary to: {recipient}")
+
         html_content = format_summary_as_html(data)
+
         message = MIMEMultipart("alternative")
-        message["Subject"], message["From"], message["To"] = "Your AI Meeting Summary Report", user, recipient
+        message["Subject"] = "Your MeetScribe Meeting Insights"
+        message["From"] = f"MeetScribe <{user}>"
+        message["To"] = recipient
+
         message.attach(MIMEText(html_content, "html"))
-        with smtplib.SMTP(host, port) as server:
+
+        with smtplib.SMTP(host, port, timeout=30) as server:
             server.starttls()
             server.login(user, password)
-            server.sendmail(user, recipient, message.as_string())
-        return {"message": f"Summary successfully sent to {recipient}"}
+            server.sendmail(
+                user,
+                recipient,
+                message.as_string()
+            )
+
+        print(f"Email successfully sent to: {recipient}")
+
+        return {
+            "message": f"Meeting insights successfully sent to {recipient}"
+        }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send email. Error: {str(e)}")
+        print("========================================")
+        print("EMAIL SENDING ERROR")
+        print(repr(e))
+        print("========================================")
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send email. Error: {str(e)}"
+        )
