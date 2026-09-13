@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Body, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-import google.generativeai as genai
+from google import genai
 from groq import Groq
 
 load_dotenv()
@@ -27,11 +27,17 @@ groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 # --- API and App Initialization ---
 app = FastAPI(title="AI Meeting Summarizer API")
 try:
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    gemini_model = genai.GenerativeModel('gemini-3.5-flash')
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+    if not GOOGLE_API_KEY:
+        print("WARNING: GOOGLE_API_KEY is not configured.")
+        gemini_client = None
+    else:
+        gemini_client = genai.Client(api_key=GOOGLE_API_KEY)
+
 except Exception as e:
     print(f"FATAL: Error configuring Google AI client: {e}")
-    gemini_model = None
+    gemini_client = None
 
 
 
@@ -167,15 +173,26 @@ async def summarize_transcript(data: dict = Body(...)):
     ---
     """
     try:
-        generation_config = genai.types.GenerationConfig(response_mime_type="application/json")
-        response = await gemini_model.generate_content_async(prompt, generation_config=generation_config)
+        response = await gemini_client.aio.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json"
+            }
+        )
+
+        print("Gemini response received successfully.")
+
         return json.loads(response.text)
+
     except Exception as e:
         print(f"Gemini summarization error: {repr(e)}")
-    raise HTTPException(
-        status_code=500,
-        detail=f"Failed to process with Gemini. Error: {str(e)}"
-    )
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process with Gemini. Error: {str(e)}"
+        )
+        
 @app.post("/email_summary")
 async def email_summary(data: dict = Body(...)):
     host, port_str, user, password, recipient = (os.getenv("EMAIL_HOST"), os.getenv("EMAIL_PORT"), os.getenv("EMAIL_USER"), os.getenv("EMAIL_PASSWORD"), os.getenv("EMAIL_RECIPIENT"))
