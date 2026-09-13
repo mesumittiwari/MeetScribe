@@ -5,7 +5,7 @@ import axios from 'axios';
 import { saveAs } from 'file-saver';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-
+const MAX_AUDIO_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 
 const AnalysisSection = ({ title, icon, items, color }) => {
   if (!items || (Array.isArray(items) && items.length === 0)) return null;
@@ -80,12 +80,28 @@ function App() {
   };
 
   const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    resetState(true);
-    setFileName(file.name);
-    await handleTranscribe(file);
+  const file = event.target.files[0];
+  if (!file) return;
+
+  resetState(true);
+
+  // Check file size before uploading
+  if (file.size > MAX_AUDIO_FILE_SIZE) {
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+    setError(
+      `File is too large (${fileSizeMB} MB). Maximum allowed size is 25 MB.`
+    );
+
+    setFileName('');
     event.target.value = null;
+    return;
+  }
+
+  setFileName(file.name);
+  await handleTranscribe(file);
+
+  event.target.value = null;
   };
 
   const handleTranscribe = async (file) => {
@@ -207,7 +223,7 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* --- Step 1: Upload and Transcription --- */}
           <div className="bg-slate-800/50 rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-slate-200 mb-4"><span className="text-2xl text-cyan-400 mr-2">1.</span> Upload Audio File(Max file size: 25MB)</h2>
+            <h2 className="text-xl font-semibold text-slate-200 mb-4"><span className="text-2xl text-cyan-400 mr-2">1.</span> Upload Audio File</h2>
             <p className="text-sm text-slate-400 mt-2">
               Supported: MP3, WAV, M4A, MP4, OGG, FLAC, WEBM • Max 25 MB
             </p>
