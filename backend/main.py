@@ -171,7 +171,7 @@ async def summarize_transcript(data: dict = Body(...)):
         response = await gemini_model.generate_content_async(prompt, generation_config=generation_config)
         return json.loads(response.text)
     except Exception as e:
-    print(f"Gemini summarization error: {repr(e)}")
+        print(f"Gemini summarization error: {repr(e)}")
     raise HTTPException(
         status_code=500,
         detail=f"Failed to process with Gemini. Error: {str(e)}"
