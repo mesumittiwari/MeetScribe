@@ -3,14 +3,26 @@ import os
 import json
 import smtplib
 import httpx
+
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Body, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+
 import google.generativeai as genai
+from groq import Groq
 
 load_dotenv()
+# --- API Keys ---
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    print("WARNING: GROQ_API_KEY is not configured.")
+
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 # --- API and App Initialization ---
 app = FastAPI(title="AI Meeting Summarizer API")
@@ -21,8 +33,7 @@ except Exception as e:
     print(f"FATAL: Error configuring Google AI client: {e}")
     gemini_model = None
 
-HUGGING_FACE_API_KEY = os.getenv("HUGGING_FACE_API_KEY")
-WHISPER_API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
+
 
 origins = ["http://localhost:5173", "http://127.0.0.1:5173", "https://ai-meeting-summarizer-1-sfrq.onrender.com"]
 app.add_middleware(
@@ -85,47 +96,53 @@ def read_root():
 
 @app.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
-    if not HUGGING_FACE_API_KEY:
-        raise HTTPException(status_code=501, detail="Hugging Face API key not found. Transcription feature is disabled.")
-
-    
-    file_content = await file.read()
-    
-# Determine the content type based on file extension or use a default audio mime type
-    content_type = file.content_type
-    if not content_type or content_type == "application/octet-stream":
-        # Try to infer from filename if content_type is not specific
-        filename = file.filename.lower()
-        if filename.endswith('.mp3'):
-            content_type = 'audio/mpeg'
-        elif filename.endswith('.wav'):
-            content_type = 'audio/wav'
-        else:
-            # Default to a common audio format if we can't determine
-            content_type = 'audio/mpeg'
-
-    # Add content_type to headers
-    headers = {
-        "Authorization": f"Bearer {HUGGING_FACE_API_KEY}",
-        "Content-Type": content_type
-    }
+    if not groq_client:
+        raise HTTPException(
+            status_code=501,
+            detail="Groq API key not configured. Transcription feature is disabled."
+        )
 
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client: # Increased timeout for large files
-            response = await client.post(WHISPER_API_URL, headers=headers, data=file_content)
+        file_content = await file.read()
 
+        if not file_content:
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded audio file is empty."
+            )
 
+        print(
+            f"Transcription started: {file.filename} "
+            f"({len(file_content) / (1024 * 1024):.2f} MB)"
+        )
 
-        if response.status_code != 200:
-            print(f"Hugging Face API Error: {response.text}")
-            raise HTTPException(status_code=response.status_code, detail=f"Transcription service failed: {response.json().get('error', 'Unknown error')}")
+        transcription = groq_client.audio.transcriptions.create(
+            file=(file.filename, file_content),
+            model="whisper-large-v3-turbo",
+            response_format="json",
+            temperature=0.0
+        )
 
-        result = response.json()
-        return {"transcript": result.get("text", "No transcript found in response.")}
+        transcript = transcription.text.strip()
+
+        print(
+            f"Transcription completed: {len(transcript)} characters"
+        )
+
+        return {
+            "transcript": transcript
+        }
+
+    except HTTPException:
+        raise
 
     except Exception as e:
-        print(f"An error occurred during transcription: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to transcribe audio. Error: {str(e)}")
+        print(f"Transcription error: {e}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to transcribe audio. Error: {str(e)}"
+        )
 
 
 @app.post("/summarize")
