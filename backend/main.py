@@ -152,8 +152,8 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
 @app.post("/summarize")
 async def summarize_transcript(data: dict = Body(...)):
-    if not gemini_model:
-        raise HTTPException(status_code=500, detail="Gemini AI model not initialized.")
+    if not gemini_client:
+        raise HTTPException(status_code=501, detail="Gemini API key not configured. Summarization is disabled.")
     transcript = data.get("transcript")
     if not transcript or len(transcript.strip()) < 20:
         raise HTTPException(status_code=400, detail="Please provide a valid transcript.")
@@ -192,7 +192,7 @@ async def summarize_transcript(data: dict = Body(...)):
             status_code=500,
             detail=f"Failed to process with Gemini. Error: {str(e)}"
         )
-        
+
 @app.post("/email_summary")
 async def email_summary(data: dict = Body(...)):
     host, port_str, user, password, recipient = (os.getenv("EMAIL_HOST"), os.getenv("EMAIL_PORT"), os.getenv("EMAIL_USER"), os.getenv("EMAIL_PASSWORD"), os.getenv("EMAIL_RECIPIENT"))
