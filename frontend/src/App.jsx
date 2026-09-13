@@ -64,6 +64,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('');
   const [error, setError] = useState('');
+  const [fileError, setFileError] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [fileName, setFileName] = useState('');
@@ -81,28 +82,34 @@ function App() {
 
   const handleFileChange = async (event) => {
   const file = event.target.files[0];
+
   if (!file) return;
 
-  resetState(true);
+  // Clear previous file error
+  setFileError('');
+  setError('');
 
-  // Check file size before uploading
+  // Check file size BEFORE uploading
   if (file.size > MAX_AUDIO_FILE_SIZE) {
     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
 
-    setError(
-      `File is too large (${fileSizeMB} MB). Maximum allowed size is 25 MB.`
+    setFileError(
+      `File is too large: ${fileSizeMB} MB. Maximum allowed size is 25 MB.`
     );
 
-    setFileName('');
+    // Do not start transcription
     event.target.value = null;
     return;
   }
 
+  // File is valid
+  resetState(true);
   setFileName(file.name);
+
   await handleTranscribe(file);
 
   event.target.value = null;
-  };
+};
 
   const handleTranscribe = async (file) => {
     setIsLoading(true);
@@ -234,6 +241,15 @@ function App() {
             >Upload Audio</button>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden"
               accept=".wav,.mp3,.m4a,.mp4,.mpeg,.mpga,.ogg,.flac,.webm" />
+            {fileError && (
+              <div
+                className="mt-4 px-4 py-3 rounded-md bg-red-900/40 border border-red-700 text-red-300"
+                role="alert"
+              >
+                <span className="font-semibold">Upload Error: </span>
+                {fileError}
+              </div>
+            )}
             {fileName && <p className="text-sm text-center text-slate-400 mt-3">File: <span className="font-medium text-slate-300">{fileName}</span></p>}
 
             {isLoading && loadingStatus.startsWith('Transcribing') && (
