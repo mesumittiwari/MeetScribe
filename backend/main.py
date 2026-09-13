@@ -28,7 +28,7 @@ groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 app = FastAPI(title="AI Meeting Summarizer API")
 try:
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-3.5-flash')
 except Exception as e:
     print(f"FATAL: Error configuring Google AI client: {e}")
     gemini_model = None
@@ -171,8 +171,11 @@ async def summarize_transcript(data: dict = Body(...)):
         response = await gemini_model.generate_content_async(prompt, generation_config=generation_config)
         return json.loads(response.text)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process with Gemini. Error: {str(e)}")
-
+    print(f"Gemini summarization error: {repr(e)}")
+    raise HTTPException(
+        status_code=500,
+        detail=f"Failed to process with Gemini. Error: {str(e)}"
+    )
 @app.post("/email_summary")
 async def email_summary(data: dict = Body(...)):
     host, port_str, user, password, recipient = (os.getenv("EMAIL_HOST"), os.getenv("EMAIL_PORT"), os.getenv("EMAIL_USER"), os.getenv("EMAIL_PASSWORD"), os.getenv("EMAIL_RECIPIENT"))
