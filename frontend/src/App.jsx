@@ -207,13 +207,17 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* --- Step 1: Upload and Transcription --- */}
           <div className="bg-slate-800/50 rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-slate-200 mb-4"><span className="text-2xl text-cyan-400 mr-2">1.</span> Upload Audio File(.wav Only)</h2>
+            <h2 className="text-xl font-semibold text-slate-200 mb-4"><span className="text-2xl text-cyan-400 mr-2">1.</span> Upload Audio File(Max file size: 25MB)</h2>
+            <p className="text-sm text-slate-400 mt-2">
+              Supported: MP3, WAV, M4A, MP4, OGG, FLAC, WEBM • Max 25 MB
+            </p>
             <button
               onClick={() => fileInputRef.current.click()}
               className="w-full px-5 py-3 text-base font-bold rounded-md text-white bg-cyan-600 hover:bg-cyan-700 transition-colors disabled:opacity-50"
               disabled={isLoading}
             >Upload Audio</button>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="audio/*"/>
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden"
+              accept=".wav,.mp3,.m4a,.mp4,.mpeg,.mpga,.ogg,.flac,.webm" />
             {fileName && <p className="text-sm text-center text-slate-400 mt-3">File: <span className="font-medium text-slate-300">{fileName}</span></p>}
 
             {isLoading && loadingStatus.startsWith('Transcribing') && (

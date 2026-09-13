@@ -12,6 +12,22 @@ from google import genai
 from groq import Groq
 
 load_dotenv()
+
+# --- Supported Audio Formats ---
+ALLOWED_AUDIO_EXTENSIONS = {
+    ".wav",
+    ".mp3",
+    ".m4a",
+    ".mp4",
+    ".mpeg",
+    ".mpga",
+    ".ogg",
+    ".flac",
+    ".webm",
+}
+
+MAX_AUDIO_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
+
 # --- API Keys ---
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -111,6 +127,18 @@ async def transcribe_audio(file: UploadFile = File(...)):
             detail="Groq API key not configured. Transcription feature is disabled."
         )
 
+    filename = file.filename or ""
+    extension = os.path.splitext(filename)[1].lower()
+
+    if extension not in ALLOWED_AUDIO_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported audio format. "
+                "Supported formats: WAV, MP3, M4A, MP4, MPEG, MPGA, OGG, FLAC, WEBM."
+            )
+        )
+
     try:
         file_content = await file.read()
 
@@ -118,6 +146,12 @@ async def transcribe_audio(file: UploadFile = File(...)):
             raise HTTPException(
                 status_code=400,
                 detail="The uploaded audio file is empty."
+            )
+
+        if len(file_content) > MAX_AUDIO_FILE_SIZE:
+            raise HTTPException(
+                status_code=400,
+                detail="File is too large. Maximum supported size is 25 MB."
             )
 
         print(
@@ -152,7 +186,6 @@ async def transcribe_audio(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Failed to transcribe audio. Error: {str(e)}"
         )
-
 
 @app.post("/summarize")
 async def summarize_transcript(data: dict = Body(...)):
