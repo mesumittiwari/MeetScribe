@@ -394,37 +394,36 @@ function App() {
             </div>
           )}
       </div>
+            <footer className="mt-12 pb-6 text-center text-sm text-slate-500">
+        <p>
+          © 2026 Sumit Tiwari · MeetScribe
+        </p>
+
+        <p className="mt-2">
+          Built with React · FastAPI · Groq Whisper · Google Gemini
+        </p>
+
+        <div className="mt-3 flex justify-center gap-5">
+          <a
+            href="https://github.com/mesumittiwari/MeetScribe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 hover:text-cyan-300 transition"
+          >
+            GitHub
+          </a>
+
+          <a
+            href="https://www.linkedin.com/in/mesumittiwari/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 hover:text-cyan-300 transition"
+          >
+            LinkedIn
+          </a>
+        </div>
+      </footer>
     </div>
-
-    <footer className="mt-12 pb-6 text-center text-sm text-slate-500">
-    <p>
-      © 2026 Sumit Tiwari · MeetScribe
-    </p>
-
-    <p className="mt-2">
-      Built with React · FastAPI · Groq Whisper · Google Gemini
-    </p>
-
-    <div className="mt-3 flex justify-center gap-5">
-      <a
-        href="https://github.com/mesumittiwari/MeetScribe"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-cyan-400 hover:text-cyan-300 transition"
-      >
-        GitHub
-      </a>
-
-      <a
-        href="https://www.linkedin.com/in/mesumittiwari/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-cyan-400 hover:text-cyan-300 transition"
-      >
-        LinkedIn
-      </a>
-    </div>
-  </footer>
   );
 }
 
