@@ -221,10 +221,33 @@ function App() {
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto">
         <header className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">AI Meeting <span className="text-cyan-400">Summarizer</span></h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">Meet<span className="text-cyan-400">Scribe</span></h1>
           <p className="mt-4 text-lg text-slate-400">Developed by: Sumit Tiwari</p>
-          <p className="mt-4 text-lg text-slate-400">Al-Powered Meeting Transcript Summarizer and Action Item Extractor.</p>
-          <p className="mt-4 text-lg text-slate-400">Upload an audio file to generate a transcript, then analyze it for key insights.</p>
+          <p className="mt-4 text-lg text-slate-400">A full-stack meeting intelligence system that provides actionables and insights.</p>
+          <p className="mt-4 text-lg text-slate-400">Upload an audio/video file to generate a transcript, then analyze it for key insights.</p>
+          <p className="mt-4 text-sm text-slate-400">
+      💡 <span className="font-semibold text-slate-300">Tip:</span>{' '}
+            Files must be under 25 MB. If your file is larger:
+            {' '}
+            <a
+              href="https://audio-compressor.freecompress.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:text-cyan-300 underline"
+            >
+              compress your audio
+            </a>
+            {' '}or{' '}
+            <a
+              href="https://biteable.com/tools/extract-audio-from-video/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:text-cyan-300 underline"
+            >
+              extract audio from your video
+            </a>
+            .
+          </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
