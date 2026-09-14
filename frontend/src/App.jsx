@@ -222,7 +222,6 @@ function App() {
       <div className="max-w-5xl mx-auto">
         <header className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">Meet<span className="text-cyan-400">Scribe</span></h1>
-          <p className="mt-4 text-lg text-slate-400">Developed by: Sumit Tiwari</p>
           <p className="mt-4 text-lg text-slate-400">A full-stack meeting intelligence system that provides actionables and insights.</p>
           <p className="mt-4 text-lg text-slate-400">Upload an audio/video file to generate a transcript, then analyze it for key insights.</p>
           <p className="mt-4 text-sm text-slate-400">
@@ -396,6 +395,36 @@ function App() {
           )}
       </div>
     </div>
+
+    <footer className="mt-12 pb-6 text-center text-sm text-slate-500">
+    <p>
+      © 2026 Sumit Tiwari · MeetScribe
+    </p>
+
+    <p className="mt-2">
+      Built with React · FastAPI · Groq Whisper · Google Gemini
+    </p>
+
+    <div className="mt-3 flex justify-center gap-5">
+      <a
+        href="https://github.com/mesumittiwari/MeetScribe"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300 transition"
+      >
+        GitHub
+      </a>
+
+      <a
+        href="https://www.linkedin.com/in/mesumittiwari/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300 transition"
+      >
+        LinkedIn
+      </a>
+    </div>
+  </footer>
   );
 }
 
