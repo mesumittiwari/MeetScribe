@@ -61,7 +61,11 @@ except Exception as e:
 
 
 
-origins = ["http://localhost:5173", "http://127.0.0.1:5173", "https://ai-meeting-summarizer-1-sfrq.onrender.com"]
+origins = ["http://localhost:5173", 
+    "http://127.0.0.1:5173", 
+    # "https://ai-meeting-summarizer-1-sfrq.onrender.com", 
+    "https://mesumittiwari.github.io",]
+    
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
