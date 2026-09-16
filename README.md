@@ -885,8 +885,7 @@ Potential future improvements include:
 
 🚀 **Live Application:**
 
-https://ai-meeting-summarizer-1-sfrq.onrender.com/
-
+https://mesumittiwari.github.io/MeetScribe/
 
 ---
 
